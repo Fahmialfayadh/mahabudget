@@ -1,0 +1,110 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Database
+*.db
+*.sqlite3
+*.sqlite
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Project Specific
+uploads/
+receipts/
+temp/
+tmp/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype
+.pytype/
+
+# Distribution / packaging
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Flask instance folder (if any)
+instance/
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Migrations (keep structure, ignore data)
+migrations/*.sql
+!migrations/schema.sql
+venv/
