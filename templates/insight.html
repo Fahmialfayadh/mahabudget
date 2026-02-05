@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SIBudget - Insight pengeluaran dan analisis emosi">
+    <title>{{ title }}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/main.css?v=6.0">
+    <link rel="stylesheet" href="/static/css/insight.css?v=6.0">
+
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <span class="logo-icon"><i class="bi bi-wallet2"></i></span>
+                    <span>SIBudget</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="/" class="nav-link">Dashboard</a>
+                    <a href="/chat" class="nav-link">Chat</a>
+                    <a href="/insight" class="nav-link active">Insight</a>
+                </nav>
+
+                <div class="nav-right">
+                    <button class="nav-btn" onclick="toggleTheme()" title="Toggle Dark Mode">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    </button>
+
+                    <div class="nav-auth">
+                        {% if user %}
+                        <div class="user-menu">
+                            <button class="user-btn" onclick="toggleUserMenu()">
+                                {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture }}" alt="Avatar" class="user-avatar">
+                                {% else %}
+                                <div class="user-avatar-placeholder">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                {% endif %}
+                                <span class="user-name">{{ user.full_name.split(' ')[0] }}</span>
+                                <i class="bi bi-chevron-down" style="font-size: 0.8rem; opacity: 0.7;"></i>
+                            </button>
+                            <div class="user-dropdown" id="userDropdown">
+                                <div class="dropdown-header">
+                                    <span class="dropdown-email" title="{{ user.email }}">{{ user.email }}</span>
+                                </div>
+                                <a href="#" class="dropdown-item" onclick="logout()">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <a href="/login" class="btn-pill primary">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="insight-container">
+            <h1 class="page-title"><i class="bi bi-bar-chart-fill"></i> Insight Pengeluaranmu</h1>
+            <p class="page-subtitle">Lihat insight pengeluaranmu</p>
+
+            <!-- Month Selector -->
+            <div class="month-selector" style="margin-bottom: var(--spacing-lg);">
+                <div class="filter-toggle">
+                    <button class="filter-btn active" id="filterMonthly">Bulanan</button>
+                    <button class="filter-btn" id="filterAllTime">All time</button>
+                </div>
+                <div class="month-nav" id="monthNav">
+                    <button class="month-btn" id="prevMonth"><i class="bi bi-arrow-left"></i></button>
+                    <span class="month-current" id="currentMonth">Januari 2026</span>
+                    <button class="month-btn" id="nextMonth"><i class="bi bi-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <section class="insight-section">
+                <div class="section-head">
+                    <div>
+                        <div class="section-title" id="summaryTitle"><i class="bi bi-activity"></i> Ringkasan Bulan Ini
+                        </div>
+                        <div class="section-subtitle">Overview pengeluaranmu</div>
+                    </div>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                        <div class="stat-value" id="statTotal">Rp 0</div>
+                        <div class="stat-label">Total Pengeluaran</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-receipt"></i></div>
+                        <div class="stat-value" id="statCount">0</div>
+                        <div class="stat-label">Jumlah Transaksi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div class="stat-value" id="statAverage">Rp 0</div>
+                        <div class="stat-label">Rata-rata per Transaksi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" id="topEmotionIcon"><i class="bi bi-emoji-neutral"></i></div>
+                        <div class="stat-value" id="topEmotion">-</div>
+                        <div class="stat-label">Emosi Dominan</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="insight-section">
+                <div class="section-head">
+                    <div>
+                        <div class="section-title"><i class="bi bi-stars"></i> Sorotan Bulan Ini</div>
+                        <div class="section-subtitle">Pola yang langsung kelihatan dari datamu.</div>
+                    </div>
+                </div>
+                <div class="highlight-grid" id="highlightGrid">
+                    <div class="highlight-card loading-skeleton" style="height: 86px;"></div>
+                    <div class="highlight-card loading-skeleton" style="height: 86px;"></div>
+                    <div class="highlight-card loading-skeleton" style="height: 86px;"></div>
+                </div>
+            </section>
+
+            <section class="insight-section">
+                <div class="narrative-section" id="narrativeSection">
+                    <div class="narrative-title"><i class="bi bi-chat-quote-fill"></i> Kata Domcur tentang bulan ini:
+                    </div>
+                    <p class="narrative-content" id="narrativeContent">
+                        Loading...
+                    </p>
+                </div>
+            </section>
+
+            <!-- REGRET AUDIT SECTION -->
+            <section class="insight-section" id="auditSection">
+                <div class="section-head">
+                    <div>
+                        <div class="section-title"><i class="bi bi-exclamation-triangle-fill"
+                                style="color: #ef4444;"></i> Audit Penyesalan</div>
+                        <div class="section-subtitle">Evaluasi belanjaan pas lagi emosi (Sedih/Marah/Stress) > 48 jam
+                            lalu.</div>
+                    </div>
+                </div>
+
+                <div class="callout" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2);">
+                    <div class="callout-icon" style="color: #ef4444"><i class="bi bi-trash3-fill"></i></div>
+                    <div>
+                        <div class="callout-title" style="color: #ef4444">Total Dana Terbuang (Nyesel)</div>
+                        <div class="callout-text"
+                            style="font-size: 1.5rem; font-weight: 700; color: #ef4444; margin: 5px 0;"
+                            id="regretTotalAmount">Rp 0</div>
+                        <div class="callout-text">Uang yang lu akui gak worth it.</div>
+                    </div>
+                </div>
+
+                <div class="audit-list" id="auditList"
+                    style="display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem;">
+                    <!-- Audit cards injected via JS -->
+                    <div class="audit-card-empty" style="color: var(--text-muted); font-style: italic;">
+                        Tidak ada transaksi yang perlu diaudit saat ini.
+                    </div>
+                </div>
+            </section>
+
+            <!-- MOOD MATRIX SECTION -->
+            <div class="chart-section">
+                <h2 class="chart-title"><i class="bi bi-grid-3x3-gap-fill"></i> Matriks Mood vs. Value</h2>
+                <p style="color: var(--text-muted); margin-bottom: var(--spacing-md); font-size: 0.875rem;">
+                    Scatter plot: Kiri (Negatif) ke Kanan (Positif). Atas (Mahal) ke Bawah (Murah).
+                </p>
+                <div class="chart-container">
+                    <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+
+            <div class="callout" id="emotionInsightCallout">
+                <div class="callout-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                <div>
+                    <div class="callout-title">Insight Emosi</div>
+                    <div class="callout-text" id="emotionInsightText">Menyiapkan insight emosional...</div>
+                </div>
+            </div>
+
+            <!-- Emotional Spending Chart -->
+            <div class="chart-section">
+                <h2 class="chart-title"><i class="bi bi-emoji-smile"></i> Emotional Spending</h2>
+                <p style="color: var(--text-muted); margin-bottom: var(--spacing-md); font-size: 0.875rem;">
+                    Perasaan apa yang bikin dompetmu paling boncos?
+                </p>
+                <div class="chart-meta" id="emotionMeta">
+                    <span class="meta-pill">Total: Rp 0</span>
+                    <span class="meta-pill">Dominan: -</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="emotionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Chart -->
+            <div class="chart-section">
+                <h2 class="chart-title"><i class="bi bi-pie-chart-fill"></i> Kategori Pengeluaran</h2>
+                <div class="chart-meta" id="categoryMeta">
+                    <span class="meta-pill">Top kategori: -</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="history-section">
+                <div class="history-title">
+                    <span><i class="bi bi-clock-history"></i> Riwayat Transaksi</span>
+                    <div class="history-actions">
+                        <button id="selectAllBtn" class="btn-icon hidden" onclick="toggleSelectAll()">
+                            <i class="bi bi-check2-square"></i> Pilih semua
+                        </button>
+                        <button id="deleteBtn" class="btn-icon danger hidden" onclick="deleteSelected()">
+                            <i class="bi bi-trash"></i> Hapus (<span id="deleteCount">0</span>)
+                        </button>
+                        <button id="editModeBtn" class="btn-icon" onclick="toggleEditMode()">
+                            <i class="bi bi-list-check"></i> Edit
+                        </button>
+                    </div>
+                </div>
+                <div class="history-subtitle" id="historySubtitle">Menampilkan transaksi terbaru kamu.</div>
+                <div class="history-list" id="historyList">
+                    <!-- Transactions will be rendered here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Pengeluaran</h3>
+                <button class="modal-close" onclick="closeEditModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label class="form-label">Item</label>
+                    <input type="text" class="form-input" id="editItem">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jumlah (Rp)</label>
+                    <input type="number" class="form-input" id="editAmount">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kategori</label>
+                    <select class="form-input" id="editCategory">
+                        <option value="Makanan & Minuman">Makanan & Minuman</option>
+                        <option value="Transportasi">Transportasi</option>
+                        <option value="Belanja">Belanja</option>
+                        <option value="Hiburan">Hiburan</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Kesehatan">Kesehatan</option>
+                        <option value="Tagihan">Tagihan</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mood</label>
+                    <select class="form-input" id="editMood">
+                        <option value="Senang">😊 Senang</option>
+                        <option value="Sedih">😢 Sedih</option>
+                        <option value="Marah">😠 Marah</option>
+                        <option value="Stress">😰 Stress</option>
+                        <option value="Lapar">🍕 Lapar</option>
+                        <option value="Netral">😐 Netral</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeEditModal()">Batal</button>
+                    <button class="btn btn-primary" onclick="saveExpense()">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script src="/static/js/theme.js?v=1.0"></script>
+    <script>
+        // ==================== Configuration ====================
+        const API_BASE = '';
+        const USER_ID = {{ user.id if user else 'null' }};
+    </script>
+    <script src="/static/js/insight.js?v=6.0"></script>
+
+</body>
+
+</html>

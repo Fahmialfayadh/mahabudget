@@ -1,0 +1,293 @@
+/* ==================== EXPENSE SELECTION MODAL ==================== */
+.selection-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.selection-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.selection-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.selection-container {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    max-width: 600px;
+    width: 90%;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--glass-border);
+    animation: slideUp 0.3s ease;
+    z-index: 10000;
+}
+
+/* ... existing close button ... */
+.selection-close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: var(--bg-secondary);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.selection-close:hover {
+    background: var(--emotion-marah);
+    color: white;
+    transform: rotate(90deg);
+}
+
+.selection-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: var(--spacing-xs);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.selection-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xl);
+    font-size: 1rem;
+}
+
+.selection-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.selection-card {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: 100%;
+}
+
+.selection-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.selection-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--text-muted);
+}
+
+.selection-card:hover::after {
+    opacity: 1;
+}
+
+/* Specific Style for Manual */
+.selection-card:first-child:hover {
+    border-color: var(--text-secondary);
+}
+
+.selection-card.highlighted {
+    /* Background handled by !important rule below/above to ensure dark mode consistency */
+    border: 1px solid var(--primary);
+    position: relative;
+}
+
+/* Dark mode adjustment if needed, but variables should handle it */
+/* Use a pseudo-element for the gradient effect to blend with theme */
+.selection-card.highlighted::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, var(--primary), var(--secondary));
+    opacity: 0.05;
+    z-index: 0;
+    pointer-events: none;
+}
+
+[data-theme="dark"] .selection-card.highlighted {
+    background: linear-gradient(145deg, #1e1b4b, #2e1065);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.selection-card.highlighted:hover {
+    border-color: var(--primary);
+    box-shadow: 0 10px 30px -5px rgba(124, 58, 237, 0.3);
+}
+
+.selection-card-icon {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: all 0.3s;
+}
+
+.selection-card:hover .selection-card-icon {
+    color: var(--text-primary);
+    background: var(--glass-border);
+}
+
+.selection-card.highlighted .selection-card-icon {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--primary);
+}
+
+.selection-card.highlighted:hover .selection-card-icon {
+    background: var(--primary);
+    color: white;
+}
+
+.selection-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.selection-card.highlighted .selection-card-title {
+    color: var(--text-primary);
+}
+
+.selection-card-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-lg);
+    flex: 1;
+    /* Push badge to bottom if needed */
+}
+
+.selection-card.highlighted .selection-card-desc {
+    color: var(--text-secondary);
+}
+
+.selection-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.25rem 0.6rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+
+/* Dark mode adjustment */
+[data-theme="dark"] .selection-card.highlighted {
+    background: linear-gradient(145deg, #1e1b4b, #2e1065);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* Featured 'Chat AI' Card - Always Dark Theme */
+.selection-card.highlighted {
+    background: linear-gradient(145deg, #1e1b4b, #2e1065) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    position: relative;
+}
+
+/* Enforce white text for highlighted card in ALL modes */
+.selection-card.highlighted .selection-card-title {
+    color: #ffffff !important;
+}
+
+.selection-card.highlighted .selection-card-desc {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.selection-card.highlighted .selection-card-icon {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+
+.selection-card.highlighted .selection-card-badge {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.selection-card.highlighted:hover {
+    border-color: var(--primary);
+    box-shadow: 0 10px 30px -5px rgba(124, 58, 237, 0.4);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .selection-options {
+        grid-template-columns: 1fr;
+    }
+
+    .selection-container {
+        padding: var(--spacing-lg);
+    }
+
+    .selection-title {
+        font-size: 1.5rem;
+    }
+
+    .selection-card-icon {
+        font-size: 2.5rem;
+    }
+}

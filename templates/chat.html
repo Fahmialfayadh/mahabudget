@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SIBudget - Teman curhat keuanganmu yang mengerti perasaan">
+    <title>{{ title }}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/main.css?v=6.0">
+
+    <style>
+        /* Page-specific styles moved to main.css for better dark mode support */
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <header class="app-header">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <span class="logo-icon"><i class="bi bi-wallet2"></i></span>
+                    <span>SIBudget</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="/" class="nav-link">Dashboard</a>
+                    <a href="/chat" class="nav-link active">Chat</a>
+                    <a href="/insight" class="nav-link">Insight</a>
+                    <button class="nav-btn restart" onclick="restartChat()" title="Restart Chat"><i
+                            class="bi bi-arrow-clockwise"></i></button>
+                </nav>
+
+                <div class="nav-right">
+                    <button class="nav-btn" onclick="toggleTheme()" title="Toggle Dark Mode">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    </button>
+
+                    <div class="nav-auth">
+                        {% if user %}
+                        <div class="user-menu">
+                            <button class="user-btn" onclick="toggleUserMenu()">
+                                {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture }}" alt="Avatar" class="user-avatar">
+                                {% else %}
+                                <div class="user-avatar-placeholder">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                {% endif %}
+                                <span class="user-name">{{ user.full_name.split(' ')[0] }}</span>
+                                <i class="bi bi-chevron-down" style="font-size: 0.8rem; opacity: 0.7;"></i>
+                            </button>
+                            <div class="user-dropdown" id="userDropdown">
+                                <div class="dropdown-header">
+                                    <span class="dropdown-email" title="{{ user.email }}">{{ user.email }}</span>
+                                </div>
+                                <a href="#" class="dropdown-item" onclick="logout()">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <a href="/login" class="btn-pill primary">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="chat-container">
+            <!-- Welcome Section (shown when empty) -->
+            <div class="welcome-hero" id="welcomeHero" style="display: none;">
+                <h1 class="welcome-title">Hai! Ceritain dong pengeluaranmu <i class="bi bi-chat-quote-fill"
+                        style="font-size: 0.8em; vertical-align: middle;"></i></h1>
+                <p class="welcome-subtitle">Gue bakal dengerin, catet, dan bantu track keuangan lu</p>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be rendered here by JavaScript -->
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-action" onclick="handleQuickAction('Tadi makan siang 35rb')">
+                    <i class="bi bi-egg-fried"></i> Makan siang
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('Naik gojek 15k')">
+                    <i class="bi bi-bicycle"></i> Transport
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('Beli kopi 25rb')">
+                    <i class="bi bi-cup-hot"></i> Ngopi
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('Review pengeluaran bulan ini dong')">
+                    <i class="bi bi-bar-chart-fill"></i> Review bulanan
+                </button>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input-wrapper">
+                <!-- File Preview (Hidden by default) -->
+                <div id="filePreview" class="file-preview" style="display: none;">
+                    <div class="preview-card">
+                        <div class="preview-icon">
+                            <i class="bi bi-image"></i>
+                        </div>
+                        <div class="preview-info">
+                            <span id="previewFileName" class="preview-name">image.jpg</span>
+                            <span class="preview-size" id="previewFileSize">2.5 MB</span>
+                        </div>
+                        <button class="btn-remove-file" onclick="clearFileSelection()">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <button class="chat-btn upload" id="uploadBtn" title="Lampirkan gambar">
+                        <i class="bi bi-paperclip" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <input type="text" class="chat-input" id="chatInput"
+                        placeholder="Ceritain pengeluaran lu hari ini..." autocomplete="off">
+                    <button class="chat-btn send" id="sendBtn">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hidden file input for receipt upload -->
+            <input type="file" class="hidden-input" id="fileInput" accept="image/*" capture="environment">
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Set user ID from authenticated session
+        window.CURRENT_USER_ID = {{ user.id if user else 'null' }};
+    </script>
+    <script src="/static/js/theme.js?v=1.0"></script>
+    <script src="/static/js/app.js?v=2.0"></script>
+</body>
+
+</html>

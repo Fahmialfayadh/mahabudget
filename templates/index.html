@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SIBudget - Dashboard pengeluaran dan emosi">
+    <title>{{ title }}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/main.css?v=6.0">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/selection_modal.css">
+
+</head>
+
+<body>
+    <div class="app-layout">
+        <header class="app-header">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <span class="logo-icon"><i class="bi bi-wallet2"></i></span>
+                    <span>SIBudget</span>
+                </a>
+
+                <nav class="nav-links">
+                    <a href="/" class="nav-link active">Dashboard</a>
+                    <a href="/chat" class="nav-link">Chat</a>
+                    <a href="/insight" class="nav-link">Insight</a>
+                </nav>
+
+                <div class="nav-right">
+                    <button class="nav-btn" onclick="toggleTheme()" title="Toggle Dark Mode">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    </button>
+
+                    <div class="nav-auth">
+                        {% if user %}
+                        <div class="user-menu">
+                            <button class="user-btn" onclick="toggleUserMenu()">
+                                {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture }}" alt="Avatar" class="user-avatar">
+                                {% else %}
+                                <div class="user-avatar-placeholder">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                {% endif %}
+                                <span class="user-name">{{ user.full_name.split(' ')[0] }}</span>
+                                <i class="bi bi-chevron-down" style="font-size: 0.8rem; opacity: 0.7;"></i>
+                            </button>
+                            <div class="user-dropdown" id="userDropdown">
+                                <div class="dropdown-header">
+                                    <span class="dropdown-email" title="{{ user.email }}">{{ user.email }}</span>
+                                </div>
+                                <a href="#" class="dropdown-item" onclick="logout()">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <a href="/login" class="btn-pill primary">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-container">
+            <section class="dashboard-hero">
+                <div>
+                    {% if user %}
+                    <h1 class="hero-title">Hello, {{ user.full_name.split(' ')[0] }}!</h1>
+                    {% else %}
+                    <h1 class="hero-title">Hello, there!</h1>
+                    {% endif %}
+                    <p class="hero-subtitle"> Lihat kondisi pengeluaran dan emosi minggu ini.</p>
+                </div>
+                <div class="hero-actions">
+                    <button class="btn-hero-action" onclick="showExpenseSelectionModal()">
+                        <i class="bi bi-plus-lg"></i> Tambah Pengeluaran
+                    </button>
+                    <!-- Chat & Insight buttons removed (redundant with navbar) -->
+                </div>
+            </section>
+
+            <!-- ROW 1: Weekly & Categories -->
+            <section class="dash-grid-top">
+                <!-- Weekly Expense -->
+                <div class="card weekly-card animate-enter animate-delay-1">
+                    <div class="card-header">
+                        <div class="card-title"><i class="bi bi-graph-up-arrow"></i> Pengeluaran Minggu Ini</div>
+                        <a class="card-link" href="/insight"><i class="bi bi-arrow-right"></i></a>
+                    </div>
+                    <div class="weekly-body-v2">
+                        <div class="metric-big">
+                            <span class="metric-label">Total</span>
+                            <span class="metric-value" id="weeklyTotal">Rp 0</span>
+                            <span class="metric-change" id="weeklyChange">-</span>
+                        </div>
+                        <div class="mini-chart-container">
+                            <div class="weekly-bars" id="weeklyBars"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Categories -->
+                <div class="card category-card animate-enter animate-delay-2">
+                    <div class="card-header">
+                        <div class="card-title"><i class="bi bi-pie-chart-fill"></i> Top Kategori</div>
+                    </div>
+                    <div class="category-body">
+                        <div class="chart-wrapper">
+                            <canvas id="categoryDonut"></canvas>
+                        </div>
+                        <div class="category-legend" id="categoryLegend">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ROW 2: Emotion & Savings -->
+            <section class="dash-grid-mid">
+                <!-- Emotion Analysis -->
+                <div class="card emotion-card animate-enter animate-delay-3">
+                    <div class="card-header">
+                        <div class="card-title"><i class="bi bi-emoji-smile"></i> Mood & Belanja</div>
+                    </div>
+                    <div class="emotion-body-v2">
+                        <div class="emotion-main">
+                            <div class="emotion-badge large" id="emotionBadge">
+                                <span class="emotion-icon" id="emotionIcon">😐</span>
+                                <span class="emotion-name" id="emotionName">Netral</span>
+                            </div>
+                            <div class="emotion-stat">
+                                <span>Dominan</span>
+                                <b id="emotionCount">0x</b>
+                            </div>
+                        </div>
+                        <div class="emotion-correlation" id="emotionCorrelation">
+                            <div class="empty-placeholder" style="padding: var(--spacing-md); background: transparent;">
+                                <small>Analisis akan muncul setelah kamu sering curhat.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Savings Goals -->
+                <div class="card savings-card animate-enter animate-delay-3">
+                    <div class="card-header">
+                        <div class="card-title"><i class="bi bi-piggy-bank-fill" style="color: #ec4899;"></i> Target
+                            Batas
+                            Pengeluaran</div>
+                        <button class="btn-icon-small" onclick="addSavingsGoal()" title="Tambah Target"><i
+                                class="bi bi-plus"></i></button>
+                    </div>
+                    <div class="savings-list" id="savingsList">
+                        <div class="empty-state-small">Belum ada target.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ROW 3: AI Prediction & Chat -->
+            <section class="row-bottom animate-enter animate-delay-4">
+                <!-- AI Forecast -->
+                <div class="card forecast-card">
+                    <div class="forecast-icon"><i class="bi bi-stars"></i></div>
+                    <div class="forecast-content">
+                        <div class="forecast-title">AI Prediction</div>
+                        <p class="forecast-text" id="forecastText">Menganalisis pola belanja...</p>
+                    </div>
+                </div>
+
+                <!-- Chat Compact -->
+                <div class="card chat-compact js-chat-link" onclick="window.location.href='/chat'">
+                    <div class="chat-compact-header">
+                        <div class="card-title"><i class="bi bi-chat-dots-fill"></i> Chat Assistant</div>
+                        <span class="chat-badge-new">Active</span>
+                    </div>
+                    <div class="chat-input-fake">
+                        <span>Ketik curhatan atau pengeluaran...</span>
+                        <button class="btn-send-fake"><i class="bi bi-send-fill"></i></button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Expense Selection Modal -->
+    <div id="expenseSelectionModal" class="selection-overlay">
+        <div class="selection-backdrop" onclick="closeExpenseSelectionModal()"></div>
+        <div class="selection-container">
+            <button class="selection-close" onclick="closeExpenseSelectionModal()">
+                <i class="bi bi-x"></i>
+            </button>
+            <h2 class="selection-title">Pilih Metode Input</h2>
+            <p class="selection-subtitle">Bagaimana kamu mau mencatat pengeluaran?</p>
+
+            <div class="selection-options">
+                <button class="selection-card" onclick="selectManual()">
+                    <div class="selection-card-icon">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <h3 class="selection-card-title">Input Manual</h3>
+                    <p class="selection-card-desc">Isi form lengkap dengan nominal, kategori, dan emosi</p>
+                    <div class="selection-card-badge">Cepat & Terstruktur</div>
+                </button>
+
+                <button class="selection-card highlighted" onclick="selectChatAI()">
+                    <div class="selection-card-icon">
+                        <i class="bi bi-chat-dots-fill"></i>
+                    </div>
+                    <h3 class="selection-card-title">Chat AI</h3>
+                    <p class="selection-card-desc">Ceritakan aja pengeluaran mu, AI akan catat otomatis</p>
+                    <div class="selection-card-badge">✨ Rekomendasi</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Input Modal -->
+    <dialog id="manualInputModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Input Pengeluaran Manual</h3>
+                <button class="btn-close" onclick="closeManualInputModal()"><i class="bi bi-x"></i></button>
+            </div>
+            <form id="manualInputForm" onsubmit="submitManualExpense(event)">
+                <div class="form-group">
+                    <label>Nama Item</label>
+                    <input type="text" name="item_name" required placeholder="Contoh: Nasi Goreng">
+                </div>
+                <div class="form-group">
+                    <label>Nominal (Rp)</label>
+                    <input type="number" name="amount" required placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select name="category" required>
+                        <option value="Makanan & Minuman">Makanan & Minuman</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Hiburan">Hiburan</option>
+                        <option value="Belanja">Belanja</option>
+                        <option value="Tagihan">Tagihan</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Emosi Saat Ini</label>
+                    <select name="emotion_label" required>
+                        <option value="Netral">Netral (Biasa aja)</option>
+                        <option value="Senang">Senang (Mood bagus)</option>
+                        <option value="Bahagia">Bahagia (Euphoria)</option>
+                        <option value="Sedih">Sedih (Lagi down)</option>
+                        <option value="Marah">Marah (Lagi kesel)</option>
+                        <option value="Stress">Stress (Banyak pikiran)</option>
+                        <option value="Lapar">Lapar (Butuh asupan)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tanggal & Waktu Pengeluaran</label>
+                    <div style="position: relative;">
+                        <input type="text" id="datetime_picker" name="date" placeholder="Klik untuk pilih jam..."
+                            style="cursor: pointer; background: #2d3748; color: white; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #4a5568;"
+                            readonly>
+                        <i class="bi bi-calendar-event"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #cbd5e0;"></i>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-pill" onclick="closeManualInputModal()">Batal</button>
+                    <button type="submit" class="btn-pill primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Savings Modal -->
+    <dialog id="savingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="savingsModalTitle">Batas Pengeluaran</h3>
+                <button class="btn-close" onclick="closeSavingsModal()"><i class="bi bi-x"></i></button>
+            </div>
+            <form id="savingsForm" onsubmit="submitSavingsGoal(event)">
+                <input type="hidden" name="goal_id" id="savingsGoalId">
+
+                <div class="form-group">
+                    <label>Nama Target</label>
+                    <input type="text" name="name" id="savingsName" required placeholder="Contoh: Beli Laptop">
+                </div>
+
+                <div class="form-group">
+                    <label>Target Nominal (Rp)</label>
+                    <input type="number" name="target_amount" id="savingsTarget" required placeholder="0" min="1">
+                </div>
+
+                <div class="form-group" id="savingsCurrentGroup" style="display:none;">
+                    <label>Pengeluaran Saat Ini (Rp)</label>
+                    <input type="number" name="current_amount" id="savingsCurrent" placeholder="0" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label>Periode Budget</label>
+                    <select name="period_type" id="periodType" onchange="toggleCustomDates()">
+                        <option value="this_month">Bulan Ini</option>
+                        <option value="this_week">Minggu Ini (7 Hari)</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+
+
+                <div id="customDatesGroup" style="display:none;">
+                    <!-- Display Mode (Read-only) -->
+                    <div id="customDatesDisplay" style="display:block;">
+                        <div class="form-group">
+                            <label>Tanggal Custom Range</label>
+                            <div
+                                style="padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); margin-bottom: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 0.85rem; color: var(--text-muted);">Periode:</div>
+                                        <div id="dateRangeDisplay"
+                                            style="font-weight: 600; color: var(--text-primary);">-</div>
+                                    </div>
+                                    <button type="button" class="btn-pill" onclick="enableDateEdit()"
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                        <i class="bi bi-pencil"></i> Ubah
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Mode (Editable) -->
+                    <div id="customDatesInput" style="display:none;">
+                        <div class="form-group">
+                            <label>Tanggal Mulai</label>
+                            <input type="date" name="period_start" id="periodStart">
+                        </div>
+                        <div class="form-group">
+                            <label>Tanggal Akhir</label>
+                            <input type="date" name="period_end" id="periodEnd">
+                        </div>
+                        <button type="button" class="btn-pill" onclick="disableDateEdit()"
+                            style="padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                            <i class="bi bi-check"></i> Selesai
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-pill" id="btnDeleteSavings" onclick="deleteSavings()"
+                        style="display:none; color:var(--emotion-marah); border-color:var(--emotion-marah); margin-right:auto;">Hapus</button>
+                    <button type="button" class="btn-pill" onclick="closeSavingsModal()">Batal</button>
+                    <button type="submit" class="btn-pill primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <link rel="stylesheet" href="/static/css/modaldashboard.css">
+    <script>
+        // Set user ID from authenticated session
+        window.CURRENT_USER_ID = {{ user.id if user else 'null' }};
+    </script>
+    <script src="/static/js/theme.js?v=1.0"></script>
+    <script src="/static/js/dashboard.js?v=2.0"></script>
+    <script>
+        // sampai library benar-benar siap
+        window.onload = function () {
+            flatpickr("#datetime_picker", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                defaultDate: new Date(),
+                time_24hr: true,
+                static: true,
+                minuteIncrement: 1,
+                onOpen: function (selectedDates, dateStr, instance) {
+                    console.log("Picker dibuka!");
+                }
+            });
+        };
+    </script>
+</body>
+
+</html>
