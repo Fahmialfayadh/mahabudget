@@ -20,7 +20,7 @@ aiofiles==23.2.1
 
 # File Upload
 python-multipart==0.0.6
-Pillow==10.2.0
+Pillow>=10.0.0
 
 # Authentication & Security
 werkzeug>=3.0.0
