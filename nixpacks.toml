@@ -7,3 +7,6 @@ nixPkgs = ["python311", "zlib", "libjpeg", "libpng", "freetype", "lcms2", "libwe
 
 [phases.install]
 cmds = ["pip install --upgrade pip setuptools wheel", "pip install -r requirements.txt"]
+
+[start]
+cmd = "uvicorn app:app --host 0.0.0.0 --port $PORT"
