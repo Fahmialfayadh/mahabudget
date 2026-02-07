@@ -160,7 +160,8 @@ class AuthService:
                 
             return user
         except Exception as e:
-            print(f"Error creating user: {e}")
+            if settings.debug:
+                print(f"Error creating user: {e}")
             return None
     
     async def create_google_user(self, google_info: GoogleUserInfo) -> Optional[dict]:
@@ -186,7 +187,8 @@ class AuthService:
                 
             return user
         except Exception as e:
-            print(f"Error creating Google user: {e}")
+            if settings.debug:
+                print(f"Error creating Google user: {e}")
             return None
 
     async def _sync_user_to_main_db(self, user_data: dict) -> bool:
@@ -212,10 +214,12 @@ class AuthService:
                 "password": password
             }
             self.main_client.table("users").insert(main_db_data).execute()
-            print(f"[SYNC] Synced user {user_id} ({email}) to Main DB")
+            if settings.debug:
+                print(f"[SYNC] Synced user {user_id} ({email}) to Main DB")
             return True
         except Exception as e:
-            print(f"[SYNC ERROR] Failed to sync user {user_data.get('id')} to Main DB: {e}")
+            if settings.debug:
+                print(f"[SYNC ERROR] Failed to sync user {user_data.get('id')} to Main DB: {e}")
             # Try fallback: Check if username exists but with different ID
             # This is a complex case, but for now we just log the error.
             return False
@@ -271,7 +275,8 @@ class AuthService:
             self.main_client.table("refresh_tokens").insert(data).execute()
             return True
         except Exception as e:
-            print(f"Error storing refresh token: {e}")
+            if settings.debug:
+                print(f"Error storing refresh token: {e}")
             return False
     
     async def verify_refresh_token(self, token: str, user_id: int) -> bool:

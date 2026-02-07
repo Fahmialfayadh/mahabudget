@@ -168,7 +168,8 @@ async def generate_response(
         return response
         
     except Exception as e:
-        print(f"Error in bestie response generation: {e}")
+        if settings.debug:
+            print(f"Error in bestie response generation: {e}")
         return get_fallback_response(expense_data)
 
 
@@ -238,7 +239,8 @@ Bales dengan gaya lu. Jawab 1-2 kalimat. Jangan tanya kecuali perlu klarifikasi:
         return response
         
     except Exception as e:
-        print(f"Error generating casual response: {e}")
+        if settings.debug:
+            print(f"Error generating casual response: {e}")
         return "Hmm?"
 
 
@@ -296,5 +298,6 @@ Tulis 2-3 kalimat aja, santai, kayak ngobrol sama temen."""
         return chat_completion.choices[0].message.content.strip()
         
     except Exception as e:
-        print(f"Error generating monthly narrative: {e}")
+        if settings.debug:
+            print(f"Error generating monthly narrative: {e}")
         return f"Bulan ini total {formatted_total} dalam {tx_count} transaksi."

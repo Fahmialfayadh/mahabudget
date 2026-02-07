@@ -43,10 +43,13 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 30
     
+    # CORS Configuration
+    allowed_origins: str = "http://localhost:3000,http://localhost:8000"
+    
     # Google OAuth Configuration
     google_client_id: str = ""
     google_client_secret: str = ""
-    google_redirect_uri: str = "http://localhost:8000/auth/google/callback"
+    google_redirect_uri: str = ""
     
     class Config:
         env_file = ".env"

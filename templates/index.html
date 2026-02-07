@@ -376,6 +376,45 @@
         </div>
     </dialog>
 
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="welcome-modal">
+        <div class="welcome-content">
+            <div class="welcome-icon-modal"></div>
+            <h2 class="welcome-title-modal">Selamat Datang!</h2>
+            <p class="welcome-text">Pantau pengeluaranmu dengan chatting dan pahami emosi di balik belanjamu.</p>
+            <div class="welcome-actions">
+                <a href="/login" class="btn-pill primary large">Daftar Sekarang</a>
+                <button class="btn-text" onclick="closeWelcomeModal()">Nanti Saja</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in (using the window.CURRENT_USER_ID set above)
+            // and if welcome modal has not been shown in this session
+            const hasSeenWelcome = sessionStorage.getItem('welcomeShown_session');
+
+            if (!window.CURRENT_USER_ID && !hasSeenWelcome) {
+                setTimeout(() => {
+                    const modal = document.getElementById('welcomeModal');
+                    if (modal) modal.classList.add('active');
+                }, 1000); // Delay for better UX
+            }
+        });
+
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.classList.remove('active');
+                // Save flag to sessionStorage so it doesn't show again until tab close/restart
+                // or localStorage if we want it to persist longer. User said "welcome ke user yg blm login", 
+                // "kesan pertama". Session storage is good for "first impression per visit".
+                sessionStorage.setItem('welcomeShown_session', 'true');
+            }
+        }
+    </script>
+
     <link rel="stylesheet" href="/static/css/modaldashboard.css">
     <script>
         // Set user ID from authenticated session

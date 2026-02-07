@@ -143,10 +143,11 @@ async def register(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Registration error: {e}")
+        if settings.debug:
+            print(f"Registration error: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Terjadi kesalahan: {str(e)}"
+            detail="Terjadi kesalahan saat mendaftar"
         )
 
 

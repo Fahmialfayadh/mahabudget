@@ -28,9 +28,10 @@ app = FastAPI(
 )
 
 # CORS middleware for frontend
+allowed_origins_list = [origin.strip() for origin in settings.allowed_origins.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual origins
+    allow_origins=allowed_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -171,10 +172,13 @@ async def health_check():
 async def startup_event():
     """Initialize services on startup."""
     print("🚀 SIBudget starting up...")
-    print(f"📊 Debug mode: {settings.debug}")
-    print(f"🤖 Accountant Model: {settings.accountant_model}")
-    print(f"💬 Bestie Model: {settings.bestie_model}")
-    print(f"👁️ Scanner Model: {settings.scanner_model}")
+    if settings.debug:
+        print(f"📊 Debug mode: {settings.debug}")
+        print(f"🤖 Accountant Model: {settings.accountant_model}")
+        print(f"💬 Bestie Model: {settings.bestie_model}")
+        print(f"👁️ Scanner Model: {settings.scanner_model}")
+    else:
+        print("🔒 Running in production mode")
 
 
 @app.on_event("shutdown")

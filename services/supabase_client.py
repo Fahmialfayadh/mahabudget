@@ -22,7 +22,8 @@ class SupabaseService:
     """Service class for Supabase operations."""
     
     def __init__(self):
-        print(f"[DEBUG Supabase] Initializing with URL: {settings.supabase_url}")
+        if settings.debug:
+            print(f"[DEBUG Supabase] Initializing with URL: {settings.supabase_url}")
         
         # Anon client (for client-side compatible ops/reads)
         self.client: Client = create_client(
@@ -36,13 +37,16 @@ class SupabaseService:
             settings.supabase_service_key
         )
         
-        # Immediate connection test
+        # Test connection
         try:
-            print("[DEBUG Supabase] Testing Service Client connection...")
-            self.service_client.table("chat_history").select("*").limit(1).execute()
-            print("[DEBUG Supabase] Service Client Connection: OK")
+            if settings.debug:
+                print("[DEBUG Supabase] Testing Service Client connection...")
+            response = self.service_client.table("expenses").select("id").limit(1).execute()
+            if settings.debug:
+                print("[DEBUG Supabase] Service Client Connection: OK")
         except Exception as e:
-            print(f"[ERROR Supabase] Service Client Connection FAILED: {e}")
+            if settings.debug:
+                print(f"[ERROR Supabase] Service Client Connection FAILED: {e}")
             import traceback
             traceback.print_exc()
     
@@ -201,12 +205,14 @@ class SupabaseService:
                     if age.total_seconds() > 48 * 3600:
                         candidates.append(expense)
                 except Exception as e:
-                    print(f"Error parsing date {exp_date_str}: {e}")
+                    if settings.debug:
+                        print(f"Error parsing date {exp_date_str}: {e}")
                     continue
                     
             return candidates
         except Exception as e:
-            print(f"Error fetching audit candidates: {e}")
+            if settings.debug:
+                print(f"Error fetching audit candidates: {e}")
             return []
 
     async def get_regret_stats(self, user_id: int) -> dict:
@@ -264,7 +270,8 @@ class SupabaseService:
                     if msg.get("transaction_id") and msg["transaction_id"] in expense_map:
                         msg["expense_data"] = expense_map[msg["transaction_id"]]
             except Exception as e:
-                print(f"[ERROR] Failed to fetch enriched expenses: {e}")
+                if settings.debug:
+                    print(f"[ERROR] Failed to fetch enriched expenses: {e}")
         
         return messages
     
@@ -413,7 +420,8 @@ class SupabaseService:
                 }
             }
         except Exception as e:
-            print(f"Error aggregates: {e}")
+            if settings.debug:
+                print(f"Error aggregates: {e}")
             return {"top_categories": [], "forecast": {"amount": 0, "message": "Error calculating forecast"}}
 
     # ==================== SAVINGS GOALS ====================
@@ -482,7 +490,8 @@ class SupabaseService:
             return goals
             
         except Exception as e:
-            print(f"Error in get_savings_goals: {e}")
+            if settings.debug:
+                print(f"Error in get_savings_goals: {e}")
             return []
 
     async def create_savings_goal(self, user_id: int, name: str, target: int) -> dict:

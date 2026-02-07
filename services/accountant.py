@@ -393,7 +393,8 @@ async def extract_multiple_expenses(user_message: str) -> List[ExpenseExtraction
         return expenses
         
     except Exception as e:
-        print(f"Error in multi-expense extraction: {e}")
+        if settings.debug:
+            print(f"Error in multi-expense extraction: {e}")
         
         # Fallback: try to extract at least one amount
         fallback_amount = extract_amount_fallback(user_message)
