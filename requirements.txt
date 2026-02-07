@@ -30,5 +30,5 @@ email-validator==2.3.0
 # OCR & Image Processing
 paddlepaddle==3.0.0
 paddleocr>=2.10.0
-opencv-python>=4.9.0
+opencv-python-headless>=4.9.0
 numpy<2.0.0
