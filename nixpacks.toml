@@ -1,5 +1,9 @@
+# Force Python 3.11 (3.13 is too new, no pre-built wheels)
+[variables]
+NIXPACKS_PYTHON_VERSION = "3.11"
+
 [phases.setup]
-nixPkgs = ["python311", "zlib", "libjpeg", "libpng", "freetype", "lcms2", "libwebp", "harfbuzz", "fribidi"]
+nixPkgs = ["python311", "zlib", "libjpeg", "libpng", "freetype", "lcms2", "libwebp", "harfbuzz", "fribidi", "gcc"]
 
 [phases.install]
 cmds = ["pip install --upgrade pip setuptools wheel", "pip install -r requirements.txt"]
