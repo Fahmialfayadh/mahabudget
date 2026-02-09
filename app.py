@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 import os
 
@@ -99,7 +99,7 @@ async def login_page(request: Request, error: str = None):
     
     return templates.TemplateResponse(
         "login.html",
-        {"request": request, "title": "Login - SIBudget", "error": error}
+        {"request": request, "title": "Login - SIBudget | Track Your Emotional Spending", "error": error}
     )
 
 
@@ -112,7 +112,7 @@ async def register_page(request: Request):
     
     return templates.TemplateResponse(
         "register.html",
-        {"request": request, "title": "Register - SIBudget"}
+        {"request": request, "title": "Register - SIBudget | Track Your Emotional Spending"}
     )
 
 
@@ -124,7 +124,7 @@ async def home(request: Request):
     user = await get_current_user(request)
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "title": "Dashboard - SIBudget", "user": user}
+        {"request": request, "title": "SIBudget | Track Your Emotional Spending", "user": user}
     )
 
 
@@ -137,7 +137,7 @@ async def chat(request: Request):
     
     return templates.TemplateResponse(
         "chat.html",
-        {"request": request, "title": "Chat - SIBudget", "user": user}
+        {"request": request, "title": "Chat - SIBudget | Your Financial Companion", "user": user}
     )
 
 
@@ -150,8 +150,52 @@ async def insight(request: Request):
     
     return templates.TemplateResponse(
         "insight.html",
-        {"request": request, "title": "Insight - SIBudget", "user": user}
+        {"request": request, "title": "Insight - SIBudget | Spending Analytics & Emotions", "user": user}
     )
+
+
+# ==================== SEO ====================
+
+@app.get("/sitemap.xml")
+async def sitemap():
+    """XML Sitemap for search engine indexing."""
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://sibudget.asymptra.com/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>https://sibudget.asymptra.com/login</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://sibudget.asymptra.com/register</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+</urlset>"""
+    return Response(content=xml, media_type="application/xml")
+
+
+@app.get("/robots.txt")
+async def robots():
+    """Robots.txt for search engine crawlers."""
+    content = """User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Disallow: /chat
+Disallow: /insight
+Disallow: /api/
+Disallow: /docs
+Disallow: /redoc
+
+Sitemap: https://sibudget.asymptra.com/sitemap.xml
+"""
+    return Response(content=content, media_type="text/plain")
 
 
 # ==================== HEALTH CHECK ====================
