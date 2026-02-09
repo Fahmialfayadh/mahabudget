@@ -99,7 +99,7 @@ async def login_page(request: Request, error: str = None):
     
     return templates.TemplateResponse(
         "login.html",
-        {"request": request, "title": "Login - SIBudget | Track Your Emotional Spending", "error": error}
+        {"request": request, "title": "Login - SiBudget by Asymptra | Track Your Emotional Spending", "error": error}
     )
 
 
@@ -112,7 +112,7 @@ async def register_page(request: Request):
     
     return templates.TemplateResponse(
         "register.html",
-        {"request": request, "title": "Register - SIBudget | Track Your Emotional Spending"}
+        {"request": request, "title": "Register - SiBudget by Asymptra | Track Your Emotional Spending"}
     )
 
 
@@ -124,7 +124,7 @@ async def home(request: Request):
     user = await get_current_user(request)
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "title": "SIBudget | Track Your Emotional Spending", "user": user}
+        {"request": request, "title": "SiBudget by Asymptra | Track Your Emotional Spending", "user": user}
     )
 
 
@@ -137,7 +137,7 @@ async def chat(request: Request):
     
     return templates.TemplateResponse(
         "chat.html",
-        {"request": request, "title": "Chat - SIBudget | Your Financial Companion", "user": user}
+        {"request": request, "title": "Chat - SiBudget by Asymptra | Your Financial Companion", "user": user}
     )
 
 
@@ -150,7 +150,7 @@ async def insight(request: Request):
     
     return templates.TemplateResponse(
         "insight.html",
-        {"request": request, "title": "Insight - SIBudget | Spending Analytics & Emotions", "user": user}
+        {"request": request, "title": "Insight - SiBudget by Asymptra | Spending Analytics & Emotions", "user": user}
     )
 
 
